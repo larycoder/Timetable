@@ -9,41 +9,29 @@ using namespace std;
 
 char buffer[MAX];
 
-/**
- * data: list of values
- * row_len: number of value in single row
- *
- */
-void build(vector<char*> data, int row_len)
-{
-    draw_table(buffer, 5, 10);
-}
-
 void test()
 {
-    // setup
-    vector<char*> pointer;
-    pointer.push_back(get("Key 1"));
-    pointer.push_back(get("Value 1"));
-    pointer.push_back(get("Key 2"));
-    pointer.push_back(get("Value 2"));
+    Table table;
+    const char* head[] = { "name", "Dob", "gender", "prefer" };
+    const char* row0[] = { "hiep", "1999", "male", "C" };
+    const char* row1[] = { "bach", "1999", "male", "Js" };
+    const char* row2[] = { "huong", "1999", "female", "Japanese" };
+    const char* row3[] = { "huyen", "1999", "female", "Bubble" };
+    const char* row4[] = { "mai", "1999", "female", "Python" };
 
-    // run
-    build(pointer, 2);
-
-    // print result
-    cout << "[TEST] input:" << endl;
-    for (int i = 0; i < pointer.size(); i++)
-        cout << pointer.at(i) << ", ";
-
-    cout << "\n\n"
-         << "[TEST] output: " << endl
-         << buffer << endl;
+    table.set_headers(head, 4);
+    table.add_row(row0, 4);
+    table.add_row(row1, 4);
+    table.add_row(row2, 4);
+    table.add_row(row3, 4);
+    table.add_row(row4, 4);
+    table.draw(buffer, MAX);
 }
 
 int main(int argc, char* argv[])
 {
-    memset(buffer, '\0', MAX);
+    memset(buffer, 0, MAX);
     test();
+    cout << buffer;
     return 0;
 }
