@@ -90,21 +90,29 @@ void Table::draw(char* buffer, int max)
     /* draw content */
     int sub_w = (int)(this->screen_width / this->get_col_nb());
     int sub_h = (int)(this->screen_height / (this->get_row_nb() + 1));
+    int box_win = 0, text_win = (this->screen_width + 1) + 1;
     for (int i = 0; i < this->col_nb; i++) {
-        int win = (this->screen_width + 1) + (i * sub_w + 1);
-        this->write_text(buffer, win, sub_w, sub_h,
+        this->write_text(buffer, text_win, sub_w, sub_h,
             this->headers.at(i), strlen(this->headers.at(i)));
-        this->write_box(buffer, sub_w * i, sub_w, sub_h);
+        this->write_box(buffer, box_win, sub_w, sub_h, '#');
+        box_win += sub_w - 1;
+        text_win += sub_w - 1;
     }
-    for (int r = 0; r < this->row_nb; r++)
+    box_win = (this->screen_width + 1) * sub_h;
+    text_win = (this->screen_width + 1) * (sub_h + 1) + 1;
+    for (int r = 0; r < this->row_nb; r++) {
         for (int c = 0; c < this->col_nb; c++) {
-            int win = (r + 1) * sub_h * (this->screen_width + 1) + c * sub_w;
-            int text_win = (c * sub_w + 1)
-                + ((r + 1) * sub_h + 1) * (this->screen_width + 1);
             this->write_text(buffer, text_win, sub_w, sub_h,
                 this->rows.at(r).at(c), strlen(this->rows.at(r).at(c)));
-            this->write_box(buffer, win, sub_w, sub_h);
+            this->write_box(buffer, box_win, sub_w, sub_h, '-');
+            box_win += sub_w - 1;
+            text_win += sub_w - 1;
         }
+        box_win = (box_win - (box_win % (this->screen_width + 1)))
+            + (this->screen_width + 1) * (sub_h - 1);
+        text_win = (text_win - (text_win % (this->screen_width + 1)))
+            + (this->screen_width + 1) * (sub_h - 1) + 1;
+    }
 }
 
 void Table::write_text(char* screen, int win,
@@ -125,11 +133,12 @@ void Table::write_text(char* screen, int win,
     }
 }
 
-void Table::write_box(char* screen, int win, int w, int h)
+void Table::write_box(char* screen, int win, int w,
+    int h, char width_delimiter)
 {
     char* pos = screen + win;
-    memset(pos, '-', w);
-    memset(pos + (h - 1) * (this->screen_width + 1), '-', w);
+    memset(pos, width_delimiter, w);
+    memset(pos + (h - 1) * (this->screen_width + 1), width_delimiter, w);
     for (int r = 0; r < h; r++) {
         int curr = r * (this->screen_width + 1);
         pos[curr] = '|';

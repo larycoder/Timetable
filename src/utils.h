@@ -21,7 +21,8 @@ public:
     void load_table_csv(const char* file);
 
 private:
-    void write_box(char* screen, int win, int w, int h);
+    void write_box(char* screen, int win,
+        int w, int h, char width_delimiter);
     void write_text(char* screen, int win,
         int w, int h, const char* text, int sz);
     std::vector<char*> parse_csv_to_vector(
