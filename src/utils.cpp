@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <fstream>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -9,6 +10,15 @@ Table::Table()
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
     this->screen_width = w.ws_col;
     this->screen_height = w.ws_row - 2;
+}
+
+Table::~Table()
+{
+    for (int i = 0; i < this->headers.size(); i++)
+        free((void*)this->headers.at(i));
+    for (int r = 0; r < this->rows.size(); r++)
+        for (int i = 0; i < this->rows.at(r).size(); i++)
+            free((void*)this->rows.at(r).at(i));
 }
 
 int Table::get_col_nb()
@@ -34,12 +44,15 @@ int Table::get_row_max_bytes()
 /* set headers equivalent to clear old table */
 void Table::set_headers(const char** head, unsigned sz)
 {
+    this->~Table();
     this->headers.clear();
     this->rows.clear();
     this->row_nb = this->col_nb = 0;
     this->row_max_bytes = this->col_max_bytes = 0;
     for (unsigned i = 0; i < sz; i++) {
-        this->headers.push_back(head[i]);
+        char* head_cpy = (char*)malloc(strlen(head[i]) + 1);
+        memcpy(head_cpy, head[i], strlen(head[i]) + 1);
+        this->headers.push_back(head_cpy);
         this->col_nb++;
         this->col_max_bytes += strlen(head[i]);
     }
@@ -53,7 +66,9 @@ int Table::add_row(const char** row, unsigned sz)
     if (sz != this->col_nb)
         return 1;
     for (unsigned i = 0; i < sz; i++) {
-        item.push_back(row[i]);
+        char* row_cpy = (char*)malloc(strlen(row[i]) + 1);
+        memcpy(row_cpy, row[i], strlen(row[i]) + 1);
+        item.push_back(row_cpy);
         col_max_bytes += strlen(row[i]);
     }
     if (col_max_bytes > this->col_max_bytes)
@@ -120,4 +135,41 @@ void Table::write_box(char* screen, int win, int w, int h)
         pos[curr] = '|';
         pos[curr + w - 1] = '|';
     }
+}
+
+void Table::load_table_csv(const char* file)
+{
+    std::ifstream f_stream;
+    char line[5001];
+    bool head_flag = true;
+
+    f_stream.open(file);
+    while (!f_stream.eof()) {
+        std::vector<char*> data;
+        memset(line, 0, sizeof(line));
+        f_stream.getline(line, sizeof(line) - 1);
+        data = this->parse_csv_to_vector(line, strlen(line));
+        if (head_flag) {
+            this->set_headers((const char**)data.data(), data.size());
+            head_flag = false;
+        } else {
+            this->add_row((const char**)data.data(), data.size());
+        }
+    }
+    f_stream.close();
+}
+
+std::vector<char*> Table::parse_csv_to_vector(char* line, int sz)
+{
+    std::vector<char*> data;
+    int cur_pos = 0;
+    for (int i = 0; i < sz; i++) {
+        if (line[i] == ',') {
+            line[i] = 0;
+            data.push_back(&line[cur_pos]);
+            cur_pos = i + 1;
+        }
+    }
+    data.push_back(&line[cur_pos]);
+    return data;
 }

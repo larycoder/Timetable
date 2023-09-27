@@ -2,4 +2,4 @@
 project("Terminal Timetable")
 
 add_executable(timetable main.cpp utils.cpp)
-
+configure_file(timetable.csv timetable.csv COPYONLY)

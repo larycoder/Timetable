@@ -9,7 +9,7 @@ using namespace std;
 
 char buffer[MAX];
 
-void test()
+void static_test()
 {
     Table table;
     const char* head[] = { "name", "Dob", "gender", "prefer" };
@@ -28,10 +28,18 @@ void test()
     table.draw(buffer, MAX);
 }
 
+void csv_test()
+{
+    Table table;
+    table.load_table_csv("timetable.csv");
+    table.draw(buffer, MAX);
+}
+
 int main(int argc, char* argv[])
 {
     memset(buffer, 0, MAX);
-    test();
+    //static_test();
+    csv_test();
     cout << buffer;
     return 0;
 }
